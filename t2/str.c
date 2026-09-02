@@ -118,8 +118,8 @@ static int s_corrige_pos(Str_c s, int pos){
   return p;
 }
 
-static byte s_ptr_pos(Str_c s, int pos){
-  return u8_avanca_unichar(&s->dados, pos);
+static byte *s_ptr_pos(Str_c s, int pos){
+  return u8_avanca_unichar(s->dados, pos);
 }
 
 static int s_nbytes_nchar(Str_c s, int n)
@@ -127,7 +127,7 @@ static int s_nbytes_nchar(Str_c s, int n)
   if (n <= 0)
     return 0;
 
-  byte *p = u8_avanca_unichar(&s->dados, n);
+  byte *p = u8_avanca_unichar(s->dados, n);
 
   return (int)(p - s->dados);
 }
@@ -293,7 +293,7 @@ unichar s_ch(Str_c s, int pos)
   if (p < 0 || p >= s->nchar)
     return UNI_INV;
 
-  byte *ptr = u8_avanca_unichar(&s->dados, p);
+  byte *ptr = u8_avanca_unichar(s->dados, p);
 
   unichar c;
 
@@ -522,8 +522,8 @@ void s_substitui(Str s, int pos, int tam, Str_c sb)
   if (fim < pos)
     fim = pos;
 
-  byte *inicio_ptr = u8_avanca_unichar(&s->dados, pos);
-  byte *fim_ptr = u8_avanca_unichar(&s->dados, fim);
+  byte *inicio_ptr = u8_avanca_unichar(s->dados, pos);
+  byte *fim_ptr = u8_avanca_unichar(s->dados, fim);
 
   int bytes_inicio = inicio_ptr - s->dados;
   int bytes_fim = fim_ptr - s->dados;
@@ -631,8 +631,8 @@ void s_substring(Str s, Str_c sb, int pos, int tam)
   if (fim < pos)
     fim = pos;
 
-  byte *inicio_ptr = u8_avanca_unichar(&sb->dados, pos);
-  byte *fim_ptr = u8_avanca_unichar(&sb->dados, fim);
+  byte *inicio_ptr = u8_avanca_unichar(sb->dados, pos);
+  byte *fim_ptr = u8_avanca_unichar(sb->dados, fim);
 
   int bytes = fim_ptr - inicio_ptr;
   int chars = fim - pos;
@@ -705,7 +705,7 @@ void s_insere_c(Str s, int pos, unichar c)
   if (pos > s->nchar)
     pos = s->nchar;
 
-  byte *ptr = u8_avanca_unichar(&s->dados, pos);
+  byte *ptr = u8_avanca_unichar(s->dados, pos);
 
   int byte_pos = ptr - s->dados;
 
@@ -798,10 +798,10 @@ void s_apara(Str s, Str_c sobras)
   }
 
   int bytes_inicio =
-      u8_avanca_unichar(&s->dados, inicio) - s->dados;
+      u8_avanca_unichar(s->dados, inicio) - s->dados;
 
   int bytes_fim =
-      u8_avanca_unichar(&s->dados, fim) - s->dados;
+      u8_avanca_unichar(s->dados, fim) - s->dados;
 
   int novo_nbytes = bytes_fim - bytes_inicio;
   int novo_nchar = fim - inicio;
