@@ -526,11 +526,16 @@ void s_substitui(Str s, int pos, int tam, Str_c sb)
   if (fim < pos)
     fim = pos;
 
-  byte *inicio_ptr = u8_avanca_unichar(s->dados, pos);
-  byte *fim_ptr = u8_avanca_unichar(s->dados, fim);
+  int bytes_inicio = 0;
+  int bytes_fim = 0;
 
-  int bytes_inicio = inicio_ptr - s->dados;
-  int bytes_fim = fim_ptr - s->dados;
+  if (s->nbytes > 0) {
+      byte *inicio_ptr = u8_avanca_unichar(s->dados, pos);
+      byte *fim_ptr = u8_avanca_unichar(s->dados, fim);
+
+      bytes_inicio = inicio_ptr - s->dados;
+      bytes_fim = fim_ptr - s->dados;
+  }
 
   int bytes_removidos = bytes_fim - bytes_inicio;
 
@@ -554,11 +559,9 @@ void s_substitui(Str s, int pos, int tam, Str_c sb)
     novo = malloc(novo_nbytes);
     assert(novo != NULL);
 
-    memcpy(
-        novo,
-        s->dados,
-        bytes_inicio
-    );
+    if (bytes_inicio > 0) {
+      memcpy(novo, s->dados, bytes_inicio);
+    }
 
     if (sb != NULL && sb->nbytes > 0) {
       memcpy(
@@ -568,11 +571,12 @@ void s_substitui(Str s, int pos, int tam, Str_c sb)
       );
     }
 
-    memcpy(
-        novo + bytes_inicio + bytes_inseridos,
-        s->dados + bytes_fim,
-        s->nbytes - bytes_fim
-    );
+    int restantes = s->nbytes - bytes_fim;
+
+    if (restantes > 0) {
+        memcpy(novo + bytes_inicio + bytes_inseridos,
+              s->dados + bytes_fim, restantes);
+    }
   }
 
   free(s->dados);
