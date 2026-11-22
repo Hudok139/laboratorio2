@@ -87,7 +87,7 @@ static void s_reserva(Str s, int nbytes){
     return;
   }
 
-  new_capacity - s_capacidade(nbytes);
+  new_capacity = s_capacidade(nbytes);
 
   if(new_capacity != s->alocado){
     byte *novo = realloc(s->dados, new_capacity);
@@ -288,7 +288,11 @@ unichar s_ch(Str_c s, int pos)
 {
   s_ok(s);
 
-  int p = s_corrige_pos(s, pos);
+  int p = pos;
+
+  if (p < 0) {
+      p = s->nchar + p + 1;
+  }
 
   if (p < 0 || p >= s->nchar)
     return UNI_INV;
@@ -705,9 +709,7 @@ void s_insere_c(Str s, int pos, unichar c)
   if (pos > s->nchar)
     pos = s->nchar;
 
-  byte *ptr = u8_avanca_unichar(s->dados, pos);
-
-  int byte_pos = ptr - s->dados;
+  int byte_pos = s_nbytes_nchar(s, pos);
 
   int novo_nbytes = s->nbytes + nbytes;
 
