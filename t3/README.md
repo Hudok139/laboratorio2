@@ -1,0 +1,89 @@
+## Trabalho 3 - calculadora (e lista duplamente encadeada)
+
+### Descrição
+
+Implemente uma calculadora, como descrito abaixo.
+
+São fornecidos os seguintes arquivos:
+- `str.h` - interface do TAD Str, igual o do t2, com a adição de algumas funções
+- `lista.h` - interface do TAD Lista, que deve ter uma lista de Str
+- `calc.h` - interface da função que deve implementar a calculadora
+- `utf8.h`, `utf8.c` - iguais aos do t2
+
+Você deve completar o arquivo `str.c` do t2, para incluir as funções adicionadas em `str.h`.
+Você deve implementar o TAD Lista em `lista.c`, como uma lista duplamente encadeada, com nó sentinela.
+Você deve implementar em `calc.c` as funções cujas interfaces estão em `calc.h`.
+
+A função `calculadora` deve usar a função `tokeniza` para separar a string em uma lista de substrings chamadas *tokens*.
+A função `calculadora` deve ter mais duas listas, que implementam pilhas, uma para operandos e outra para operadores.
+Essa lista deve ser acessada um *token* por vez, e classificá-los em operador (se for um entre `+-*/^()=` ou operando (se for uma sequência de dígitos talvez com um ponto) ou erro.
+Se o token for operando, deve empilhá-lo na pilha de operandos.
+Se o token for operador, deve compará-lo com o topo da pilha de operadores, e realizar uma das operações:
+- Acusa erro de falta de `(`
+- Acusa erro de falta de `)`
+- Empilha o operador na pilha de operadores
+- Descarta o operador
+- Opera — desempilha um operador e executa uma função correspondente a esse operador, passando a pilha de operandos para ela. Depois, volta a comparar o operador lido da entrada com o do topo da pilha.
+- Termina o cálculo
+
+A decisão sobre qual dessas opções executar está codificada na tabela abaixo.
+A tabela mostra na vertical o operador do topo da pilha e na horizontal o operador da entrada.
+O operador V representa a pilha vazia e o operador F representa o final da entrada.
+
+Em caso de erro, o cálculo é interrompido, e a função retorna uma string informando o erro.
+
+No término do cálculo, deve sobrar somente um elemento na lista de operandos, e é esse o valor a retornar. Caso contrário, é erro.
+
+A função que realiza uma operação deve retirar os operandos necessários do topo da pilha e colocar o resultado também no topo.
+O valor de um operando deve ser obtido por uma função. Essa função chama a função necessária de Str. Na fase 2 essa função será aumentada.
+Em uma operação, se não houver operandos suficientes na pilha, é erro.
+
+Os dados temporários usados para o cálculo devem ser liberados (lista, pilhas).
+
+Tabela de operações:
+p\\e    |  F | +- |\*/ |  ^ |  ( |  )
+--      | -- | -- | -- | -- | -- | --
+**V**   |  T |  E |  E |  E |  E | Er
+**+-**  |  O |  O |  E |  E |  E |  O
+**\*/** |  O |  O |  O |  E |  E |  O
+**^**   |  O |  O |  O |  E |  E |  O
+**(**   | Er |  E |  E |  E |  E |  D
+
+O programa principal deve ler um arquivo de entrada, separá-lo em uma lista de linhas, chamar a função de cálculo para cada linha da lista, colocar cada resultado em uma lista de saída, gravar um arquivo de saída com uma resposta por linha.
+
+### Parte II
+
+Inclua suporte a variáveis na calculadora.
+
+A calculadora conterá um dicionário, contendo o nome e valor das variáveis.
+O arquivo `dicionario.h` contém a interface do TAD para isso, com uma implementação simples em `dic_simples.c` e alguns testes em `teste_dic.c`.
+O dicionário deve sobreviver entre chamadas a `calculadora`.
+
+A função que separa em tokens separa assim:
+- pula caracteres espaço
+- se o primeiro caractere não espaço for um dos operadores, o token é esse caractere
+- se o primeiro caractere não espaço for um dígito ou '.', o token é esse caractere mais os caracteres seguintes que também forem dígito ou '.'
+- se o primeiro caractere não espaço for uma letra ou '$', o token é esse caractere mais os caracteres seguintes que forem letra, dígito ou '_'
+- senão é erro.
+
+Um token que não é erro nem operador é operando.
+
+Faça uma função que retorna o valor de um operando. Se o operando for um número, obtenha o valor usando a função s_número da Str. Se o operando não for um número, use o operando como chave na busca no dicionário de variáveis, e use a função s_número no valor resultante. Se a busca não for bem sucedida, é erro.
+
+Uma função que opera, por exemplo uma função para a soma, retira dois operandos da pilha de operandos, usa a função acima para obter o valor deles, realiza a operação, cria uma nova string com o resultado e empilha essa string na pilha de operandos. E destrói as strings.
+
+O operador `=` retira dois operandos da pilha, obtém o valor do primeiro retirado, cria uma string com esse valor, verifica se o segundo valor retirado é um nome, e insere esse nome como chave para o valor, no dicionário. Empilha o resultado.
+
+Na tabela, a linha com o operador `=` contém `E` em todas as colunas exceto nas colunas `F` e `)`, que tem `O`. A coluna do `=` tem `E` em todas as linhas.
+
+### Dicas + esclarecimentos
+
+- Crie um TAD para a calculadora, assim fica mais fácil organizar o código e ter onde manter seus dados (como o dicionário das variáveis).
+- Para converter um número para uma string, use a função `sprintf`. Funciona como printf, mas em vez de colocar o resultado no terminal, coloca como uma string em um vetor, que ela deve receber como primeiro parâmetro. `sprintf(v, "%d", 5+7);` coloca os caracteres `'1'`, `'2'` e `'\0'` nas primeiras 3 posições do vetor `v`.
+- Para converter uma string em um número, use `sscanf`. `sscanf(v, "%3d", &x);` coloca na variável `x` o valor inteiro obtido dos primeiros 3 caracteres do vetor `v`. A função `scanf` para no primeiro caractere que não puder ser usado na conversão, ou no \0 ou, quando tem um número depois do `%` como no exemplo, após esse número de caracteres. Caso esse número esteja em uma variável, dá para fazer: `sscanf(v, "%*d", n, &x);`
+- Variáveis iniciam em letra ou '$'. Não precisa considerar acentos.
+- O dicionário serve para armazenar as variáveis. Quando opera o `=`, altera ou cria uma variável, inserindo no dicionário; quando o nome da variável aparece em outro local, é feita uma consulta ao dicionário.
+
+   A função que obtém o valor de um operando deve verificar o tipo (por exemplo, olhando o primeiro caractere do operando), e se for variável, obter o valor no dicionário e depois obter o valor numérico na string obtida do dicionário. Senão, obter o valor diretamente da string do operando.
+
+   Como quando opera o `=` não se usa o valor numérico, dá para abreviar a obtenção do valor nesse caso: se não for variável, já tem o valor como string, e se for, obtém o valor como string do dicionário.

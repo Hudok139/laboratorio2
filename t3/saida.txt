@@ -1,0 +1,8 @@
+5
+21
+10
+20
+15
+15
+#ERRO divisão por zero
+512

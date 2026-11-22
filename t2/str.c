@@ -327,6 +327,10 @@ bool s_igual(Str_c s, Str_c sb)
   if (s->nbytes != sb->nbytes)
     return false;
 
+  if (s->nbytes == 0) {
+    return true;
+  }
+
   return memcmp(s->dados, sb->dados, s->nbytes) == 0;
 }
 
@@ -780,6 +784,10 @@ void s_apara(Str s, Str_c sobras)
 {
   s_ok(s);
   s_ok(sobras);
+
+  if (s->nbytes == 0) {
+    return;
+}
 
   int inicio = 0;
 
