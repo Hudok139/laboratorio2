@@ -610,73 +610,76 @@ void s_substitui(Str s, int pos, int tam, Str_c sb)
 
 void s_substring(Str s, Str_c sb, int pos, int tam)
 {
-  s_ok(s);
-  s_ok(sb);
+    s_ok(s);
+    s_ok(sb);
 
-  if (pos < 0)
-    pos = sb->nchar + pos + 1;
+    if (sb->nbytes == 0) {
+        free(s->dados);
+        s->dados = NULL;
+        s->nbytes = 0;
+        s->nchar = 0;
+        s->alocado = 0;
+        return;
+    }
 
-  if (pos < 0)
-    pos = 0;
+    if (pos < 0) {
+        pos = sb->nchar + pos + 1;
+    }
 
-  if (pos > sb->nchar)
-    pos = sb->nchar;
+    if (pos < 0) {
+        pos = 0;
+    }
 
-  int fim;
+    if (pos > sb->nchar) {
+        pos = sb->nchar;
+    }
 
-  if (tam < 0)
-    fim = sb->nchar;
-  else
-    fim = pos + tam;
+    int fim;
 
-  if (fim > sb->nchar)
-    fim = sb->nchar;
+    if (tam < 0 || tam > sb->nchar - pos) {
+        fim = sb->nchar;
+    } else {
+        fim = pos + tam;
+    }
 
-  if (fim < pos)
-    fim = pos;
+    byte *inicio_ptr = u8_avanca_unichar(sb->dados, pos);
+    byte *fim_ptr = u8_avanca_unichar(sb->dados, fim);
 
-  byte *inicio_ptr = u8_avanca_unichar(sb->dados, pos);
-  byte *fim_ptr = u8_avanca_unichar(sb->dados, fim);
+    int bytes = fim_ptr - inicio_ptr;
+    int chars = fim - pos;
+    byte *novo = NULL;
 
-  int bytes = fim_ptr - inicio_ptr;
-  int chars = fim - pos;
+    if (bytes > 0) {
+        novo = malloc(bytes);
+        assert(novo != NULL);
+        memcpy(novo, inicio_ptr, bytes);
+    }
 
-  byte *novo = NULL;
+    free(s->dados);
 
-  if (bytes > 0) {
-    novo = malloc(bytes);
-    assert(novo != NULL);
+    s->dados = NULL;
+    s->nbytes = 0;
+    s->nchar = 0;
+    s->alocado = 0;
 
-    memcpy(novo, inicio_ptr, bytes);
-  }
+    if (bytes > 0) {
+        int capacidade = MIN_ALLOC;
 
-  free(s->dados);
+        while (capacidade < bytes) {
+            capacidade *= 2;
+        }
 
-  s->dados = NULL;
-  s->nbytes = 0;
-  s->nchar = 0;
-  s->alocado = 0;
+        s->dados = malloc(capacidade);
+        assert(s->dados != NULL);
+        memcpy(s->dados, novo, bytes);
 
-  if (bytes > 0) {
+        s->nbytes = bytes;
+        s->nchar = chars;
+        s->alocado = capacidade;
+    }
 
-    int capacidade = MIN_ALLOC;
-
-    while (capacidade < bytes)
-      capacidade *= 2;
-
-    s->dados = malloc(capacidade);
-    assert(s->dados != NULL);
-
-    memcpy(s->dados, novo, bytes);
-
-    s->nbytes = bytes;
-    s->nchar = chars;
-    s->alocado = capacidade;
-  }
-
-  free(novo);
-
-  s_ok(s);
+    free(novo);
+    s_ok(s);
 }
 
 void s_copia(Str s, Str_c sb)
@@ -716,11 +719,9 @@ void s_insere_c(Str s, int pos, unichar c)
   byte *novo = malloc(novo_nbytes);
   assert(novo != NULL);
 
-  memcpy(
-      novo,
-      s->dados,
-      byte_pos
-  );
+  if (byte_pos > 0) {
+    memcpy(novo, s->dados, byte_pos);
+}
 
   memcpy(
       novo + byte_pos,
@@ -728,11 +729,12 @@ void s_insere_c(Str s, int pos, unichar c)
       nbytes
   );
 
-  memcpy(
-      novo + byte_pos + nbytes,
-      s->dados + byte_pos,
-      s->nbytes - byte_pos
-  );
+  int restantes = s->nbytes - byte_pos;
+
+  if (restantes > 0) {
+      memcpy(novo + byte_pos + nbytes,
+            s->dados + byte_pos, restantes);
+  }
 
   free(s->dados);
 
